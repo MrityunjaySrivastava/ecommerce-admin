@@ -1,36 +1,9 @@
+import dbConnect from "@/lib/mongodb";
+import Product from "@/models/Product";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "../api/auth/[...nextauth]/route";
-import ProductCharts from "@/components/ProductCharts";
 import DeleteProductButton from "@/components/DeleteProductButton";
-
-import { cookies } from "next/headers";
-
-async function getProducts() {
-  const cookieStore = await cookies();
-
-  const cookieHeader = cookieStore
-    .getAll()
-    .map(
-      (cookie) => `${cookie.name}=${cookie.value}`
-    )
-    .join("; ");
-
-  const res = await fetch("/api/products", {
-    cache: "no-store",
-    headers: {
-      Cookie: cookieHeader,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return res.json();
-}
-
-
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -39,7 +12,8 @@ export default async function DashboardPage() {
     redirect("/auth/login");
   }
 
-  const products = await getProducts();
+  await dbConnect();
+  const products = await Product.find().lean();
 
   return (
     <div className="p-10">
@@ -55,7 +29,7 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-4">
         {products.map((p: any) => (
           <div
-            key={p._id}
+            key={p._id.toString()}
             className="bg-white p-4 rounded shadow flex justify-between items-center"
           >
             <div className="flex items-center gap-4">
@@ -82,16 +56,12 @@ export default async function DashboardPage() {
               >
                 Edit
               </a>
-              <DeleteProductButton productId={p._id} />
 
-
+              <DeleteProductButton productId={p._id.toString()} />
             </div>
           </div>
         ))}
-
       </div>
-      <ProductCharts products={products} />
-
     </div>
   );
 }
