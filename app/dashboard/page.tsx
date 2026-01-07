@@ -16,7 +16,7 @@ async function getProducts() {
     )
     .join("; ");
 
-  const res = await fetch("http://localhost:3000/api/products", {
+  const res = await fetch("/api/products", {
     cache: "no-store",
     headers: {
       Cookie: cookieHeader,
