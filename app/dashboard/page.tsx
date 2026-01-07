@@ -4,12 +4,33 @@ import { authOptions } from "../api/auth/[...nextauth]/route";
 import ProductCharts from "@/components/ProductCharts";
 import DeleteProductButton from "@/components/DeleteProductButton";
 
+import { cookies } from "next/headers";
+
 async function getProducts() {
+  const cookieStore = await cookies();
+
+  const cookieHeader = cookieStore
+    .getAll()
+    .map(
+      (cookie) => `${cookie.name}=${cookie.value}`
+    )
+    .join("; ");
+
   const res = await fetch("http://localhost:3000/api/products", {
     cache: "no-store",
+    headers: {
+      Cookie: cookieHeader,
+    },
   });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
+  }
+
   return res.json();
 }
+
+
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
